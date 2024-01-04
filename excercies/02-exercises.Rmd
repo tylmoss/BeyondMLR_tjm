@@ -1,0 +1,74 @@
+---
+title: "Chapter 2"
+subtitle: "Using Likelihoods"
+output: 
+  html_document:
+    number_sections: yes
+---
+
+```{r load_packages2, message = FALSE, warning=FALSE}
+# Packages required for Chapter 2
+library(gridExtra)
+library(knitr)
+library(mosaic)
+library(xtable)
+library(kableExtra)
+library(tidyverse)
+```
+
+
+# Sex bias
+
+```{r}
+Famcomp <- c("B","G","BB","BG","GB","GG","BBB","BBG",
+             "BGG","BGB","GBB","GGB","GBG","GGG")
+Numfams <- c(930,951,582,666,666,530,186,177,173,
+             148,151,125,182,159)
+Numchild <- c(930,951,1164,1332,1332,1060,558,531,
+              519,444,453,375,546,477)
+Malesfemales <- c("97:100"," ",
+    "104:100"," "," "," ",
+    "104:100"," "," "," "," "," "," "," ")
+PB <- c("0.494", " ","0.511"," "," "," ","0.510"," "," ",
+        " "," "," "," "," ")
+```
+    
+```{r, table4chp2, echo=FALSE}
+#Family comp data table
+table5chp2 <- data.frame(Famcomp, Numfams, Numchild, 
+                         Malesfemales, PB)
+kable(table5chp2, booktabs = T, 
+      col.names = c("Family Composition",
+    "Number of families", "Number of children",
+    "males : females", "p_B"),
+      caption = "Number of families and children in families with given composition in NLSY data. Sex ratio and proportion males are given by family size.") %>% 
+  column_spec(1:5, width = "3cm") %>% 
+  kable_styling(latex_options = "scale_down")
+```
+
+
+Loglikelihood function for unconditional model
+
+```{r}
+# Function
+Lik.f <- function(nBoys,nGirls,nGrid){
+    # possible values for prob a boy is born
+    pb <- seq(0, 1, length = nGrid)   
+    lik <- pb^nBoys * (1 - pb)^nGirls
+    # maximum likelihood over nGrid values of pb
+    max(lik)             
+    # value of pb where likelihood maximized
+    pb[lik==max(lik)]    
+  }
+
+
+oLik.f <- function(pb, boys, girls){
+    return(boys*log(pb) + girls*log(1-pb))
+}
+
+optimize(oLik.f, interval=c(0,1), maximum=TRUE, boys = 5416, girls = 5256)
+```
+
+
+
+

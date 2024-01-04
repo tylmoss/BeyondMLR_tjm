@@ -269,7 +269,7 @@ Lik.f(nBoys = 30, nGirls = 20, nGrid = 1000)
 
 ## Another approach: using R's optimize function
 ##   Note that the log-likelihood is optimized here
-oLik.f <- function(pb){
+oLik.f <- function(pb, boys, girls){
     return(30*log(pb) + 20*log(1-pb))
   }
 optimize(oLik.f, interval=c(0,1), maximum=TRUE)

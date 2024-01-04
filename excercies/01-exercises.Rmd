@@ -6,11 +6,123 @@ output:
     number_sections: yes
 ---
 
-## Excercise 1
-
-Gender discrimination in bank salaries.
-
-```{r}
-
+```{r load_packages1, message = FALSE, warning=FALSE}
+# Packages required for Chapter 1
+library(knitr) 
+library(gridExtra)
+library(GGally)
+library(kableExtra)
+library(jtools)
+library(rsample)
+library(broom)
+library(tidyverse)    
 ```
 
+# Horse race exercise
+
+
+```{r introtable1, warning=FALSE}
+derby.df <- read.csv(here::here("data/derbyplus.csv"))
+derby.df <- derby.df %>%
+  mutate( fast = ifelse(condition=="fast",1,0), 
+          good = ifelse(condition=="good",1,0),
+          yearnew = year - 1896,
+          fastfactor = ifelse(fast == 0, "not fast", "fast"))
+table1 <- derby.df %>%
+  filter(row_number() < 6 | row_number() > 117)
+# kable(table1, booktabs=T,caption="The first five and the last five observations from the Kentucky Derby case study.") %>%
+#   kable_styling(latex_options = "scale_down")
+```
+
+Distribution of variables
+
+
+```{r twohist, fig.align = "center", out.width="90%", fig.cap = 'Histograms of key continuous variables.  Plot (a) shows winning speeds, while plot (b) shows the number of starters.', message=FALSE}
+# EDA graphs
+speed_hist <- ggplot(data = derby.df, aes(x = speed)) + 
+  geom_histogram(binwidth = 0.5, fill = "white",
+                 color = "black") + 
+  xlab("Winning speed (ft/s)") + ylab("Frequency") + labs(title="(a)")
+starters_hist <- ggplot(data = derby.df, aes(x = starters)) + 
+  geom_histogram(binwidth = 3, fill = "white",
+                 color = "black") + 
+  xlab("Number of starters") + ylab("Frequency") + labs(title="(b)")
+grid.arrange(speed_hist, starters_hist, ncol = 2)
+```
+
+Bivariate summaries
+
+```{r bivariate, fig.align = "center", out.width = "90%", fig.cap = 'Relationships between pairs of variables in the Kentucky Derby data set.', warning=FALSE, message = FALSE}
+gg <- ggpairs(data = derby.df, 
+              columns = c("condition", "year", "starters", "speed"))
+gg[4,1] <- gg[4,1] + geom_histogram( binwidth = 0.75)
+gg[2,1] <- gg[2,1] + geom_histogram( binwidth = 20)
+gg[3,1] <- gg[3,1] + geom_histogram( binwidth = 3)
+gg
+```
+
+
+## Linear regression
+
+```{r model11, comment=NA}
+model1 <- lm(speed ~ year, data = derby.df)
+```
+
+```{r, message=FALSE}
+coef(summary(model1))
+cat(" R squared = ", summary(model1)$r.squared, "\n", 
+    "Residual standard error = ", summary(model1)$sigma)
+```
+
+Add year
+
+
+```{r model2, comment=NA}
+model2 <- lm(speed ~ yearnew, data = derby.df)
+```
+
+```{r, message=FALSE}
+coef(summary(model2))
+cat(" R squared = ", summary(model2)$r.squared, "\n", 
+    "Residual standard error = ", summary(model2)$sigma)
+```
+
+
+```{r resid2, fig.align = "center", out.width = "90%", fig.cap = 'Residual plots for Model 2.', warning=FALSE}
+# Residual diagnostics for Model 2
+par(mfrow=c(2,2))
+plot(model2)
+par(mfrow=c(1,1))
+```
+
+
+## Change to quadratic model
+
+```{r models2and2q, fig.align = "center", out.width = "90%", fig.cap = 'Linear (solid) vs. quadratic (dashed) fit.', warning=FALSE}
+# Fitted models for Model 2 and Model 2Q
+ggplot(derby.df, aes(x = year, y = speed)) +
+  geom_point() +
+  stat_smooth(method = "lm", formula = y ~ x, 
+              se = FALSE, linetype = 1) +
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2), 
+              se = FALSE, linetype = 2)
+```
+
+```{r model2Q, comment=NA}
+derby.df <- mutate(derby.df, yearnew2 = yearnew^2)
+model2q <- lm(speed ~ yearnew + yearnew2, data = derby.df)
+```
+
+
+```{r, message=FALSE}
+coef(summary(model2q))
+cat(" R squared = ", summary(model2q)$r.squared, "\n", 
+    "Residual standard error = ", summary(model2q)$sigma)
+```
+
+```{r resid2q, fig.align = "center", out.width = "90%", fig.cap = 'Residual plots for Model 2Q.', warning=FALSE}
+# Residual diagnostics for Model 2
+par(mfrow=c(2,2))
+plot(model2q)
+par(mfrow=c(1,1))
+```
