@@ -1,0 +1,16 @@
+---
+title: "Chapter 1"
+subtitle: "Review of MLR"
+output: 
+  html_document:
+    number_sections: yes
+---
+
+## Excercise 1
+
+Gender discrimination in bank salaries.
+
+```{r}
+
+```
+
